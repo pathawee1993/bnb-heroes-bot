@@ -4,70 +4,22 @@
 #RequireAdmin
 
 #include "_ImageSearch_UDF.au3"
+#include <MsgBoxConstants.au3>
 
 HotKeySet("{Esc}", "_Exit") ; Press ESC for exit
 Func _Exit()
     Exit 0
 EndFunc   ;==>_Exit
 
-;~ Global Const $Ask_On_Found = 0
-;~ Global Const $Mouse_Move_On_Found = 1
-;~ Global Const $Mouse_Click_On_Found = 0
-
-;~ Global Const $iSleep_Time=500
-
-;~ Global $sCount = 0, $_Image_1 = @ScriptDir & "\myHeroes.bmp"
-
-;~ ; First, use this function to create a file bmp, maybe a desktop icon for example')
-;~ MsgBox(64 + 262144, 'ImageSearch', 'At first, create a file bmp,' & @CRLF & 'photos that will search on the screen!')
-;~ _ImageSearch_Create_BMP($_Image_1)
-
-;~ ConsoleWrite("! Search for images: " & $_Image_1 & @CRLF & '! Searching on the screen ...' & @CRLF)
-
-;~ While 1
-;~     ToolTip('(Press ESC for EXIT) Searching ...', 1, 1)
-;~ 	Sleep($iSleep_Time)
-;~ 	$sCount += 1
-;~     Local $return = _ImageSearch($_Image_1)
-;~     If $return[0] = 1 Then
-;~         ConsoleWrite('- [' & $sCount & '] Image found:' & " X=" & $return[1] & " Y=" & $return[2] & @CRLF)
-;~         If $Mouse_Move_On_Found Then
-;~ 			MouseMove($return[1], $return[2])
-;~ 			Sleep($iSleep_Time)
-;~ 		EndIf
-;~         If $Mouse_Click_On_Found Then MouseClick("left", $return[1], $return[2])
-;~         ToolTip('(Press ESC for EXIT) - [' & $sCount & "] Image found:" &  " X=" & $return[1] & " Y=" & $return[2], 1, 1)
-;~         If $Ask_On_Found Then
-;~             Local $ask = MsgBox(6 + 262144, 'Success [' & $sCount & ']', 'Image found:' & " X=" & $return[1] & " Y=" & $return[2])
-;~             If $ask = 2 Or $ask = 3 Or $ask = 5 Or $ask = 7 Then Exit ;No, Abort, Cancel, and Ignore
-;~             If $ask = 10 Then _ImageSearch_Create_BMP($_Image_1) ; Continue       ;Try Again
-;~         EndIf
-;~     EndIf
-;~     Sleep(200)
-;~ WEnd
 Global $state = 0
-$myHeroes = @ScriptDir & "\myHeroes.bmp"
-$heroCanFight1 = @ScriptDir & "\heroCanFight1.bmp"
-$heroCanFight2 = @ScriptDir & "\heroCanFight2.bmp"
-$heroCanFight3 = @ScriptDir & "\heroCanFight3.bmp"
-$heroCanFight4 = @ScriptDir & "\heroCanFight4.bmp"
-$backFromMyHeroes = @ScriptDir & "\backFromMyHeroes.bmp"
-$goToMage = @ScriptDir & "\goToMage.bmp"
-$fightMage = @ScriptDir & "\fightMage.bmp"
-$checkGasOk1 = @ScriptDir & "\checkGasOk1.bmp"
-$checkGasOk2 = @ScriptDir & "\checkGasOk2.bmp"
-$reject = @ScriptDir & "\reject.bmp"
-$confirm = @ScriptDir & "\confirm.bmp"
-$closeResult = @ScriptDir & "\closeResult.bmp"
-$backToHome = @ScriptDir & "\backToHome.bmp"
-
+Global $timeForWaitingConfrim = 600;
 Global $state5cout = 0;
+
 While 1
    ;~ state 0, searching my heroes
    if $state = 0 Then
-	  Local $return = _ImageSearch($myHeroes)
+	  Local $return = search("\myHeroes",1)
 	  If $return[0] = 1 Then
-		 MouseMove($return[1], $return[2])
 		 MouseClick("left", $return[1], $return[2])
 		 $state = 1
 	  EndIf
@@ -76,47 +28,31 @@ While 1
    ;~ state 1, searching hero which can fight
    if $state = 1 Then
 	  Sleep(2000)
-	  Local $return = _ImageSearch($heroCanFight1)
-	  Local $return2 = _ImageSearch($heroCanFight2)
-	  Local $return3 = _ImageSearch($heroCanFight3)
-	  Local $return4 = _ImageSearch($heroCanFight4)
+	  Local $return = search("\heroCanFight",4)
+	  Local $return2 = search("\unlock",4)
 	  If $return[0] = 1 Then
 		 MouseClick("left", $return[1], $return[2])
 		 $state = 2
 	  ElseIf $return2[0] = 1 Then
 		 MouseClick("left", $return2[1], $return2[2])
 		 $state = 2
-	  ElseIf $return3[0] = 1 Then
-		 MouseClick("left", $return3[1], $return3[2])
-		 $state = 2
-	  ElseIf $return4[0] = 1 Then
-		 MouseClick("left", $return4[1], $return4[2])
-		 $state = 2
 	  Else
-;~ 		 MouseMove(50, 150)
 		 MouseClick("left", 50, 150)
-;~ 		 Local $return = _ImageSearch($backFromMyHeroes)
-;~ 		 If $return[0] = 1 Then
-;~ 			MouseMove($return[1], $return[2])
-;~ 			MouseClick("left", $return[1], $return[2])
 			$state = 0
-;~ 		 EndIf
 	  EndIf
    EndIf
 
    if $state = 2 Then
-	  Local $return = _ImageSearch($goToMage)
+	  Local $return = search("\goToMage",2)
 	  If $return[0] = 1 Then
-		 MouseMove($return[1], $return[2])
 		 MouseClick("left", $return[1], $return[2])
 		 $state = 3
 	  EndIf
    EndIf
 
    if $state = 3 Then
-	  Local $return = _ImageSearch($fightMage)
+	  Local $return = search("\fightMage",3)
 	  If $return[0] = 1 Then
-		 MouseMove($return[1], $return[2])
 		 MouseClick("left", $return[1], $return[2])
 		 $state = 4
 	  EndIf
@@ -124,49 +60,57 @@ While 1
 
    if $state = 4 Then
 	  Sleep(2000)
-	  Local $return = _ImageSearch($checkGasOk1)
-	  Local $return2 = _ImageSearch($checkGasOk2)
+	  Local $return = search("\checkGasOk",6)
 	  If $return[0] = 1 Then
-		 Local $imgConfirm = _ImageSearch($confirm)
-		 If $imgConfirm[0] = 1 Then
-			MouseMove($imgConfirm[1], $imgConfirm[2])
-			MouseClick("left", $imgConfirm[1], $imgConfirm[2])
+		 MouseMove($return[1], $return[2])
+		 Local $return = search("$confirm",1)
+		 If $return[0] = 1 Then
+			MouseClick("left", $return[1], $return[2])
 			$state = 5
 			$state5cout = 0
 		 EndIf
-;~ 	  ElseIf $return2[0] = 1 Then
-;~ 		 Local $imgConfirm = _ImageSearch($confirm)
-;~ 		 If $imgConfirm[0] = 1 Then
-;~ 			MouseMove($imgConfirm[1], $imgConfirm[2])
-;~ 			MouseClick("left", $imgConfirm[1], $imgConfirm[2])
-;~ 			$state = 5
-;~ 			$state5cout = 0
-;~ 		 EndIf
 	  Else
-		 Local $imgReject = _ImageSearch($reject)
-		 If $imgReject[0] = 1 Then
-			MouseMove($imgReject[1], $imgReject[2])
-			MouseClick("left", $imgReject[1], $imgReject[2])
+		 Local $return = search("\reject",2)
+		 If $return[0] = 1 Then
+			MouseClick("left", $return[1], $return[2])
 			$state = 6
 		 EndIf
 	  EndIf
    EndIf
 
+   ; confirmed
    if $state = 5 Then
 	  $state5cout = $state5cout + 1
-	  Local $return = _ImageSearch($closeResult)
+	  Local $return = search("\closeResult",1)
+	  Local $return2 = search("\confirmedTransaction",1)
 	  If $return[0] = 1 Then
 		 MouseClick("left", $return[1], $return[2])
 		 $state = 6
-   	  ElseIf $state5cout = 600 Then
+	  ElseIf $return2[0] = 1 Then
+		 $state = 6
+   	  ElseIf $state5cout = $timeForWaitingConfrim Then
 		 $state = 6
 	  EndIf
    EndIf
 
+   ; back to home
    if $state = 6 Then
+	  MouseClick("left", 50, 150)
+	  Sleep(200)
 	  MouseClick("left", 50, 150)
 	  $state = 0
    EndIf
 
    Sleep(1000)
 WEnd
+
+Func search($image, $cout)
+   For $i = 1 To $cout
+	  Local $return = _ImageSearch(@ScriptDir &$image&$image&$i&".bmp")
+	  If $return[0] = 1 Then
+		 Return $return
+	  EndIf
+   Next
+   Local $_Return[3] = [0,0,0]
+   Return $_Return
+EndFunc

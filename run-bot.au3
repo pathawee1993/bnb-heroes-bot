@@ -5,112 +5,249 @@
 
 #include "_ImageSearch_UDF.au3"
 #include <MsgBoxConstants.au3>
+#include <WinAPIFiles.au3>
 
 HotKeySet("{Esc}", "_Exit") ; Press ESC for exit
 Func _Exit()
     Exit 0
-EndFunc   ;==>_Exit
+ EndFunc   ;==>_Exit
 
+HotKeySet("{Enter}", "_Start") ; Press Enter for start
+Func _Start()
+    $state = 0;
+EndFunc   ;==>_Start
+
+Global $enemy = 1 ; 0 = boss, 1 = mage
 Global $state = 0
 Global $timeForWaitingConfrim = 600;
 Global $state5cout = 0;
+Global $maxAccout = 2;
+Global $currentAccout = 1;
+Global $forceAccout = 1;
+Global $changeAccoutState = 0;
 
 While 1
-   ;~ state 0, searching my heroes
-   if $state = 0 Then
-	  Local $return = search("\myHeroes",1)
-	  If $return[0] = 1 Then
-		 MouseClick("left", $return[1], $return[2])
-		 $state = 1
-	  EndIf
-   EndIf
-
-   ;~ state 1, searching hero which can fight
-   if $state = 1 Then
-	  Sleep(2000)
-	  Local $return = search("\heroCanFight",4)
-	  Local $return2 = search("\unlock",4)
-	  If $return[0] = 1 Then
-		 MouseClick("left", $return[1], $return[2])
-		 $state = 2
-	  ElseIf $return2[0] = 1 Then
-		 MouseClick("left", $return2[1], $return2[2])
-		 $state = 2
-	  Else
-		 MouseClick("left", 50, 150)
-			$state = 0
-	  EndIf
-   EndIf
-
-   if $state = 2 Then
-	  Local $return = search("\goToMage",2)
-	  If $return[0] = 1 Then
-		 MouseClick("left", $return[1], $return[2])
-		 $state = 3
-	  EndIf
-   EndIf
-
-   if $state = 3 Then
-	  Local $return = search("\fightMage",3)
-	  If $return[0] = 1 Then
-		 MouseClick("left", $return[1], $return[2])
-		 $state = 4
-	  EndIf
-   EndIf
-
-   if $state = 4 Then
-	  Sleep(2000)
-	  Local $return = search("\checkGasOk",6)
-	  If $return[0] = 1 Then
-		 MouseMove($return[1], $return[2])
-		 Local $return = search("$confirm",1)
+   If $currentAccout <> $forceAccout Then
+	  $currentAccout = changeAccout($currentAccout, $forceAccout)
+   Else
+	  ;~ state 0, searching my heroes
+	  if $state = 0 Then
+		 Local $return = search("\myHeroes")
 		 If $return[0] = 1 Then
 			MouseClick("left", $return[1], $return[2])
-			$state = 5
-			$state5cout = 0
+			$state = 1
+			Sleep(2000)
 		 EndIf
-	  Else
-		 Local $return = search("\reject",2)
+	  EndIf
+
+	  ;~ state 1, searching hero which can fight
+	  if $state = 1 Then
+		 Local $recruit = search("\recruit")
+		 Local $unlock = search("\unlock")
+		 If $recruit[0] = 1 Then
+			MouseClick("left", $recruit[1], $recruit[2])
+			Sleep(5000)
+			Local $recruit = search("\recruit")
+			If $recruit[0] = 1 Then
+			   MouseClick("left", $recruit[1], $recruit[2])
+			   $state = 7
+			   Sleep(2000)
+			EndIf
+		 ElseIf $unlock[0] = 1 Then
+			MouseClick("left", $unlock[1], $unlock[2])
+			$state = 4
+			Sleep(2000)
+		 Else
+			Local $return = search("\heroCanFight")
+			If $return[0] = 1 Then
+			   MouseClick("left", $return[1], $return[2])
+			   $state = 2
+			   Sleep(2000)
+			Else
+			   MouseClick("left", 50, 150)
+			   $state = 0
+			   Sleep(2000)
+			   $forceAccout = $forceAccout + 1
+			   If $forceAccout > $maxAccout Then
+				  $forceAccout = 1
+			   EndIf
+			EndIf
+		 EndIf
+	  EndIf
+
+	  if $state = 2 Then
+		 If $enemy = 0 Then
+			Local $return = search("\goToBoss")
+			If $return[0] = 1 Then
+			   MouseClick("left", $return[1], $return[2])
+			   $state = 3
+			   Sleep(2000)
+			EndIf
+		 ElseIf $enemy = 1 Then
+			Local $return = search("\goToMage")
+			If $return[0] = 1 Then
+			   MouseClick("left", $return[1], $return[2])
+			   $state = 3
+			   Sleep(2000)
+			EndIf
+		 EndIf
+	  EndIf
+
+	  if $state = 3 Then
+		 Sleep(2000)
+		 If $enemy = 0 Then
+			Local $return = search("\fightBoss")
+			If $return[0] = 1 Then
+			   MouseClick("left", $return[1], $return[2])
+			   $state = 4
+			   Sleep(2000)
+			Else
+			   $state = 6
+			   Sleep(2000)
+			EndIf
+		 ElseIf $enemy = 1 Then
+			Local $return = search("\fightMage")
+			If $return[0] = 1 Then
+			   MouseClick("left", $return[1], $return[2])
+			   $state = 4
+			   Sleep(2000)
+			EndIf
+		 EndIf
+	  EndIf
+
+	  if $state = 4 Then
+		 Local $return = search("\checkGasOk")
+		 If $return[0] = 1 Then
+			MouseMove($return[1], $return[2])
+			Local $return = search("\confirm")
+			If $return[0] = 1 Then
+			   MouseClick("left", $return[1], $return[2])
+			   $state = 5
+			   $state5cout = 0
+			   Sleep(2000)
+			EndIf
+		 Else
+			Local $return = search("\reject")
+			If $return[0] = 1 Then
+			   MouseClick("left", $return[1], $return[2])
+			   $state = 6
+			   Sleep(2000)
+			EndIf
+		 EndIf
+	  EndIf
+
+	  ; confirm transaction
+	  if $state = 5 Then
+		 $state5cout = $state5cout + 1
+		 Local $return = search("\closeResult")
+		 Local $return2 = search("\confirmedTransaction")
 		 If $return[0] = 1 Then
 			MouseClick("left", $return[1], $return[2])
 			$state = 6
+			Sleep(2000)
+		 ElseIf $return2[0] = 1 Then
+			$state = 6
+			Sleep(2000)
+		 ElseIf $state5cout = $timeForWaitingConfrim Then
+			$state = -1 ; not confirm in xx minute then pause until press 'Enter'
+			MsgBox($MB_SYSTEMMODAL, "Errer network", "Press 'Enter' to start bot again !")
+		 EndIf
+	  EndIf
+
+	  ; back to home
+	  if $state = 6 Then
+		 MouseClick("left", 50, 150)
+		 Sleep(200)
+		 MouseClick("left", 50, 150)
+		 $state = 0
+	  EndIf
+
+	  ; recruit check gas
+	  if $state = 7 Then
+		 Local $return = search("\checkGasRecruit")
+		 If $return[0] = 1 Then ; if gas is ok
+			MouseMove($return[1], $return[2])
+			Local $return = search("\confirm")
+			If $return[0] = 1 Then
+			   MouseClick("left", $return[1], $return[2]) ; confirm then go wait for confirm
+			   $state = 5
+			   $state5cout = 0
+			   Sleep(2000)
+			EndIf
+		 Else ; if gas not ok, reject
+			Local $return = search("\reject")
+			If $return[0] = 1 Then
+			   MouseClick("left", $return[1], $return[2])
+			   Local $return = search("\closeResult") ; if found close button
+			   If $return[0] = 1 Then
+				  MouseClick("left", $return[1], $return[2])
+				  $state = 6
+				  Sleep(2000)
+			   Else ; else go back
+				  $state = 6
+				  Sleep(2000)
+			   EndIf
+			EndIf
 		 EndIf
 	  EndIf
    EndIf
-
-   ; confirmed
-   if $state = 5 Then
-	  $state5cout = $state5cout + 1
-	  Local $return = search("\closeResult",1)
-	  Local $return2 = search("\confirmedTransaction",1)
-	  If $return[0] = 1 Then
-		 MouseClick("left", $return[1], $return[2])
-		 $state = 6
-	  ElseIf $return2[0] = 1 Then
-		 $state = 6
-   	  ElseIf $state5cout = $timeForWaitingConfrim Then
-		 $state = 6
-	  EndIf
-   EndIf
-
-   ; back to home
-   if $state = 6 Then
-	  MouseClick("left", 50, 150)
-	  Sleep(200)
-	  MouseClick("left", 50, 150)
-	  $state = 0
-   EndIf
-
-   Sleep(1000)
+   Sleep(100)
 WEnd
 
-Func search($image, $cout)
-   For $i = 1 To $cout
-	  Local $return = _ImageSearch(@ScriptDir &$image&$image&$i&".bmp")
+Func changeAccout($_currentAccout, $_forceAccout)
+   If $changeAccoutState = 0 Then
+	  Local $return = search("\metamask")
+	  If $return[0] = 1 Then
+		 MouseClick("left", $return[1], $return[2])
+		 $changeAccoutState = 1
+	  EndIf
+   ElseIf $changeAccoutState = 1 Then
+	  Local $return = search("\openedMetamask")
+	  If $return[0] = 1 Then
+		 MouseClick("left", $return[1]+150, $return[2])
+		 $changeAccoutState = 2
+	  EndIf
+   ElseIf $changeAccoutState = 2 Then
+	  Local $return = searchSpecific("\accout",$_forceAccout)
+	  If $return[0] = 1 Then
+		 MouseClick("left", $return[1]+150, $return[2])
+		 $changeAccoutState = 0
+		 Return $_forceAccout
+	  Else
+		 Local $return = search("\moveDown")
+		 If $return[0] = 1 Then
+			MouseClick("left", $return[1], $return[2])
+			MouseMove($return[1], $return[2]+50)
+		 EndIf
+	  EndIf
+   EndIf
+   Return $_currentAccout
+EndFunc
+
+Func search($image)
+   For $i = 1 To 20
+	  Local $sFilePath = @ScriptDir &$image&$image&$i&".bmp"
+	  Local $iFileExists = FileExists($sFilePath)
+	  If $iFileExists Then
+		 Local $return = _ImageSearch($sFilePath)
+		 If $return[0] = 1 Then
+			Return $return
+		 EndIf
+	  EndIf
+   Next
+   Local $_Return[3] = [0,0,0]
+   Return $_Return
+EndFunc
+
+Func searchSpecific($image,$number)
+   Local $sFilePath = @ScriptDir &$image&$image&$number&".bmp"
+   Local $iFileExists = FileExists($sFilePath)
+   If $iFileExists Then
+	  Local $return = _ImageSearch($sFilePath)
 	  If $return[0] = 1 Then
 		 Return $return
 	  EndIf
-   Next
+   EndIf
    Local $_Return[3] = [0,0,0]
    Return $_Return
 EndFunc

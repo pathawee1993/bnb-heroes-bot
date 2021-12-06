@@ -21,17 +21,23 @@ Global $enemy = 1 ; 0 = boss, 1 = mage
 Global $state = 0
 Global $timeForWaitingConfrim = 600;
 Global $state5cout = 0;
-Global $maxAccout = 2;
+Global $maxAccout = 3;
 Global $currentAccout = 1;
 Global $forceAccout = 1;
 Global $changeAccoutState = 0;
+Global $delayForChangeAccoutTo1 = 3600000 ; 60 minutes
 
 While 1
-   If $currentAccout <> $forceAccout Then
+   Local $return = search("\connectToMetamask")
+   If $return[0] = 1 Then
+	  MouseClick("left", $return[1], $return[2])
+	  Sleep(2000)
+   ElseIf $currentAccout <> $forceAccout Then
 	  $currentAccout = changeAccout($currentAccout, $forceAccout)
    Else
 	  ;~ state 0, searching my heroes
 	  if $state = 0 Then
+		 resetCss()
 		 Local $return = search("\myHeroes")
 		 If $return[0] = 1 Then
 			MouseClick("left", $return[1], $return[2])
@@ -42,18 +48,20 @@ While 1
 
 	  ;~ state 1, searching hero which can fight
 	  if $state = 1 Then
-		 Local $recruit = search("\recruit")
+		 resetCss()
+;~ 		 Local $recruit = search("\recruit")
 		 Local $unlock = search("\unlock")
-		 If $recruit[0] = 1 Then
-			MouseClick("left", $recruit[1], $recruit[2])
-			Sleep(5000)
-			Local $recruit = search("\recruit")
-			If $recruit[0] = 1 Then
-			   MouseClick("left", $recruit[1], $recruit[2])
-			   $state = 7
-			   Sleep(2000)
-			EndIf
-		 ElseIf $unlock[0] = 1 Then
+;~ 		 If $recruit[0] = 1 Then
+;~ 			MouseClick("left", $recruit[1], $recruit[2])
+;~ 			Sleep(5000)
+;~ 			Local $recruit = search("\recruit")
+;~ 			If $recruit[0] = 1 Then
+;~ 			   MouseClick("left", $recruit[1], $recruit[2])
+;~ 			   $state = 7
+;~ 			   Sleep(2000)
+;~ 			EndIf
+;~ 		 ElseIf $unlock[0] = 1 Then
+		 If $unlock[0] = 1 Then
 			MouseClick("left", $unlock[1], $unlock[2])
 			$state = 4
 			Sleep(2000)
@@ -70,12 +78,15 @@ While 1
 			   $forceAccout = $forceAccout + 1
 			   If $forceAccout > $maxAccout Then
 				  $forceAccout = 1
+				  Sleep($delayForChangeAccoutTo1)
+				  Send("{F5}")
 			   EndIf
 			EndIf
 		 EndIf
 	  EndIf
 
 	  if $state = 2 Then
+		 resetCss()
 		 If $enemy = 0 Then
 			Local $return = search("\goToBoss")
 			If $return[0] = 1 Then
@@ -87,14 +98,21 @@ While 1
 			Local $return = search("\goToMage")
 			If $return[0] = 1 Then
 			   MouseClick("left", $return[1], $return[2])
-			   $state = 3
+			   Sleep(2000)
+			   Local $mage = search("\mage")
+			   If $mage[0] = 1 Then
+				  MouseClick("left", $mage[1], $mage[2])
+				  $state = 3
+				  Sleep(2000)
+			   EndIf
+			Else
+			   $state = 6
 			   Sleep(2000)
 			EndIf
 		 EndIf
 	  EndIf
 
 	  if $state = 3 Then
-		 Sleep(2000)
 		 If $enemy = 0 Then
 			Local $return = search("\fightBoss")
 			If $return[0] = 1 Then
@@ -206,6 +224,7 @@ Func changeAccout($_currentAccout, $_forceAccout)
 	  If $return[0] = 1 Then
 		 MouseClick("left", $return[1]+150, $return[2])
 		 $changeAccoutState = 2
+		 Sleep(1000)
 	  EndIf
    ElseIf $changeAccoutState = 2 Then
 	  Local $return = searchSpecific("\accout",$_forceAccout)
@@ -222,6 +241,18 @@ Func changeAccout($_currentAccout, $_forceAccout)
 	  EndIf
    EndIf
    Return $_currentAccout
+EndFunc
+
+Func resetCss()
+   Local $return = search("\resetCss")
+   If $return[0] = 1 Then
+	  MouseClick("left", $return[1], $return[2])
+   EndIf
+   Sleep(2000)
+   Local $return = search("\resetCss")
+   If $return[0] = 1 Then
+	  MouseClick("left", $return[1], $return[2], 2)
+   EndIf
 EndFunc
 
 Func search($image)
